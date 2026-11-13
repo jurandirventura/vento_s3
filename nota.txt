@@ -1,0 +1,654 @@
+AMV - Atmospheric Motion Vectors - Sentinel-3
+Pedido: Renato 
+Data: 10/11/2026
+Motivo: Análise de vento nos polos - artigo
+
+Link base: https://data.eumetsat.int/data/
+https://data.eumetsat.int/data/map/EO:EUM:DAT:1003?start=2026-11-11T17%3A41%3A00.000Z&end=2026-11-12T17%3A41%3A37.001Z&sort=start%2Ctime%2C0https://data.eumetsat.int/data/map/EO:EUM:DAT:1003?start=2026-11-11T17%3A41%3A00.000Z&end=2026-11-12T17%3A41%3A37.001Z&sort=start%2Ctime%2C0
+
+SLSTR Level 2 Atmospheric Motion Vectors - Sentinel-3
+ID: EO:EUM:DAT:1003
+Orbit: LEO
+Data Policy: Copernicus
+
+
+ SLSTR Level 2 Atmospheric Motion Vectors - Sentinel-3
+Publication date: 24/11/2025
+DESCRIPTION
+The SLSTR Level 2 AMV products contain the Atmospheric Motion Vectors (AMVs) derived by tracking cloud features in the Brightness Temperature (BT) images of the nadir view in band S8. These data include the speeds, directions, heights and geographical locations of the wind vectors. These measurements are accompanied with tracking and time information, quality indexes and meteorological auxiliary data. - All Sentinel-3 NRT products are available at pick-up point in less than 3h - Sentinel-3 is part of a series of Sentinel satellites, under the umbrella of the EU Copernicus programme.
+
+ Data Distributor
+Organisation	EUMETSAT
+Originating Centre	European Organisation for the Exploitation of Meteorological Satellites
+URL	https://user.eumetsat.int
+E-Mail	ops@eumetsat.int
+TECHNICAL DETAILS
+Platform	Sentinel-3
+Orbit type	LEO
+Sensor	SLSTR
+Sensor Type	Optical
+ADDITIONAL INFORMATION
+Acronym	SL_2_AMV___
+Collection type	Dataset
+Collection ID	EO:EUM:DAT:1003
+Parameter	Weather, Wind, Level 2 Data
+XML Metadata	download metadata Data Distributor
+Organisation	EUMETSAT
+Originating Centre	European Organisation for the Exploitation of Meteorological Satellites
+URL	https://user.eumetsat.int
+E-Mail	ops@eumetsat.int
+TECHNICAL DETAILS
+Platform	Sentinel-3
+Orbit type	LEO
+Sensor	SLSTR
+Sensor Type	Optical
+ADDITIONAL INFORMATION
+Acronym	SL_2_AMV___
+Collection type	Dataset
+Collection ID	EO:EUM:DAT:1003
+Parameter	Weather, Wind, Level 2 Data
+XML Metadata	download metadata
+
+
+PROCEDIMENTOS PARA VISUALIZAÇÃO DO DADO
+---------------------------------------
+Ler arquivos .bufr do Sentinel-3A e Sentinel-3B.
+Extrair os vetores de vento.
+Converter os dados para DataFrame.
+Filtrar vetores por qualidade.
+Gerar arquivos CSV e GeoJSON.
+Plotar os vetores em mapas da América do Sul, com setas indicando direção e velocidade.
+
+
+Vento_s3 como um projeto independente:
+
+vento_s3/
+│
+├── data/
+│   └── sentinel3/
+│       ├── S3A/
+│       └── S3B/
+│
+├── src/
+│   ├── read_bufr.py
+│   ├── process_amv.py
+│   └── plot_amv.py
+│
+├── output/
+│   ├── csv/
+│   ├── geojson/
+│   └── figures/
+│
+├── notebooks/
+│
+├── tests/
+│
+├── requirements.txt
+└── README.md
+
+
+1. Organização dos dados
+
+    data/sentinel3/S3A: arquivos BUFR do Sentinel-3A.
+    data/sentinel3/S3B: arquivos BUFR do Sentinel-3B.
+    output/csv: vetores extraídos em tabelas CSV.
+    output/geojson: vetores georreferenciados.
+    output/figures: mapas e gráficos.1. Organização dos dados
+
+
+2. Ambiente Python
+
+Sugiro criar um ambiente exclusivo:
+
+cd ~/vento_s3
+
+conda create -n vento_s3 python=3.10 -y
+
+conda activate vento_s3
+
+pip install pybufrkit pandas numpy matplotlib cartopy eccodes
+
+3. Primeira etapa do desenvolvimento
+
+Vamos começar pelo arquivo:
+src/read_bufr.py
+
+A primeira rotina deverá:
+
+    Abrir um arquivo BUFR.
+    Identificar os metadados da mensagem.
+    Expandir o descritor 310077.
+    Extrair os 405 subconjuntos do arquivo de teste.
+    Identificar os campos e suas unidades.
+    Organizar os resultados em um DataFrame Pandas.
+
+Uma decisão importante: inicialmente vamos trabalhar com um arquivo Sentinel-3B, validar a leitura e, depois, adaptar a rotina para Sentinel-3A e processamento em lote.2. Ambiente Python
+
+
+1. Estrutura do projeto
+
+Vamos manter a organização:1. Estrutura do projeto
+
+Vamos manter a organização: 
+
+vento_s3/
+│
+├── data/
+│   └── sentinel3/
+│       ├── S3B_SL_2_AMV_....zip
+│       └── S3B_SL_2_AMV_....zip
+│
+├── src/
+│   └── read_bufr.py
+│
+├── output/
+│   └──
+│
+└── notebooks/vento_s3/
+
+
+2. Primeira rotina: src/read_bufr.py
+
+A rotina abaixo:
+
+    Localiza todos os ZIPs em data/sentinel3;
+    Abre cada ZIP sem descompactá-lo no diretório;
+    Procura arquivos .bufr ou .bin, inclusive em subdiretórios;
+    Copia temporariamente o conteúdo para um arquivo de trabalho;
+    Executa pybufrkit info;
+    Apresenta os metadados de cada produto.
+
+
+3. Executar
+
+No terminal:
+
+cd ~/vento_s3
+
+mkdir -p src output notebooks
+
+python src/read_bufr.py
+
+
+*** nova estrutura
+~/vento_s3/
+│
+├── data/
+│   └── sentinel3/
+│       │
+│       ├── S3B_SL_2_AMV_....zip
+│       │
+│       └── S3B_SL_2_AMV_....SEN3/
+│           │
+│           ├── manifest.xml
+│           ├── EOPMetadata.xml
+│           │
+│           └── S3B_SL_2_AMV_....SEN3/
+│               ├── xfdumanifest.xml
+│               ├── S3B_SL_2_AMV_....bufr
+│               └── S3B_SL_2_AMV_....bin
+│
+└── src/
+    └── read_bufr.py~/vento_s3/
+
+
+
+1. Resultado da leitura
+
+Os três arquivos apresentados possuem:
+Arquivo (horário inicial)	Subconjuntos AMV	Tamanho BUFR
+12/11/2026 16:42:38	11	1.177 bytes
+12/11/2026 16:45:38	405	29.324 bytes
+12/11/2026 17:38:37	252	17.761 bytes
+
+Cada subconjunto representa um registro de observação AMV. Em princípio, teremos um vetor por subconjunto.
+
+Os três arquivos apresentam:
+
+    BUFR Edition 4;
+    Centro emissor EUMETSAT (254);
+    Master Table Version 31;
+    Local Table Version 0;
+    Descritor 310077;
+    Dados comprimidos.
+
+Portanto, a leitura dos arquivos está funcionando.
+
+2. Sobre os arquivos descompactados
+
+A mensagem:
+Arquivos BUFR descompactados: 0
+Arquivos ZIP encontrados: 16
+
+significa que os arquivos descompactados que você mostrou anteriormente ainda não estão dentro de ~/vento_s3/data/sentinel3.
+
+Eles estavam em ~/Downloads.
+
+Não é necessário copiá-los, pois a leitura diretamente dos ZIPs já funcionou.
+3. Próxima etapa: extrair os valores dos vetores
+
+Até agora utilizamos:
+
+pybufrkit info arquivo.bufr
+
+Esse comando apresenta apenas a estrutura e os metadados da mensagem. Precisamos agora decodificar a seção 4, onde estão os valores dos 405 vetores.
+
+Vamos começar com o ecCodes.
+
+Experimente executar:
+
+bufr_dump -p -s unpack=1 arquivo.bufr
+
+Para testar diretamente um dos ZIPs, sem descompactar permanentemente:
+
+cd ~/vento_s3/data/sentinel3
+
+unzip -p \
+"S3B_SL_2_AMV____20261112T164538_20261112T164838_20261112T181605_0179_126_368_3780_MAR_O_NR_001.SEN3.zip" \
+"S3B_SL_2_AMV____20261112T164538_20261112T164838_20261112T181605_0179_126_368_3780_MAR_O_NR_001.SEN3/S3B_SL_2_AMV____20261112T164538_20261112T164838_20261112T181605_0179_126_368_3780_MAR_O_NR_001.bufr" \
+> /tmp/amv_teste.bufr
+
+Depois:
+
+bufr_dump -p -s unpack=1 /tmp/amv_teste.bufr
+
+Se a saída for muito extensa, salve em arquivo:
+
+bufr_dump -p -s unpack=1 /tmp/amv_teste.bufr > /tmp/amv_decodificado.txt
+
+4. O que vamos identificar
+
+Precisamos localizar os descritores correspondentes a:
+Informação	Campo desejado
+Latitude	Latitude do vetor
+Longitude	Longitude do vetor
+Pressão	Nível de pressão
+Altitude	Altura do vetor
+Direção	Direção do vento
+Velocidade	Velocidade do vento
+Qualidade	Indicador de qualidade AMV
+Horário	Tempo de referência do vetor
+
+Com isso, poderemos desenvolver a segunda versão de read_bufr.py, que produzirá diretamente um DataFrame Pandas e arquivos CSV.
+
+Minha sugestão é você executar primeiro o comando bufr_dump e me enviar o conteúdo de /tmp/amv_decodificado.txt, ou pelo menos o início dele. Assim identificaremos corretamente os descritores e suas unidades antes de implementar a extração automática.2. Sobre os arquivos descompactados
+
+A mensagem:
+Arquivos BUFR descompactados: 0
+Arquivos ZIP encontrados: 16
+
+significa que os arquivos descompactados que você mostrou anteriormente ainda não estão dentro de ~/vento_s3/data/sentinel3.
+
+Eles estavam em ~/Downloads.
+
+Não é necessário copiá-los, pois a leitura diretamente dos ZIPs já funcionou.
+3. Próxima etapa: extrair os valores dos vetores
+
+Até agora utilizamos:
+
+pybufrkit info arquivo.bufr
+
+Esse comando apresenta apenas a estrutura e os metadados da mensagem. Precisamos agora decodificar a seção 4, onde estão os valores dos 405 vetores.
+
+Vamos começar com o ecCodes.
+
+Experimente executar:
+
+bufr_dump -p -s unpack=1 arquivo.bufr
+
+Para testar diretamente um dos ZIPs, sem descompactar permanentemente:
+
+cd ~/vento_s3/data/sentinel3
+
+unzip -p \
+"S3B_SL_2_AMV____20261112T164538_20261112T164838_20261112T181605_0179_126_368_3780_MAR_O_NR_001.SEN3.zip" \
+"S3B_SL_2_AMV____20261112T164538_20261112T164838_20261112T181605_0179_126_368_3780_MAR_O_NR_001.SEN3/S3B_SL_2_AMV____20261112T164538_20261112T164838_20261112T181605_0179_126_368_3780_MAR_O_NR_001.bufr" \
+> /tmp/amv_teste.bufr
+
+Depois:
+
+bufr_dump -p -s unpack=1 /tmp/amv_teste.bufr
+
+Se a saída for muito extensa, salve em arquivo:
+
+bufr_dump -p -s unpack=1 /tmp/amv_teste.bufr > /tmp/amv_decodificado.txt
+
+4. O que vamos identificar
+
+Precisamos localizar os descritores correspondentes a:
+Informação	Campo desejado
+Latitude	Latitude do vetor
+Longitude	Longitude do vetor
+Pressão	Nível de pressão
+Altitude	Altura do vetor
+Direção	Direção do vento
+Velocidade	Velocidade do vento
+Qualidade	Indicador de qualidade AMV
+Horário	Tempo de referência do vetor
+
+Com isso, poderemos desenvolver a segunda versão de read_bufr.py, que produzirá diretamente um DataFrame Pandas e arquivos CSV.
+
+Minha sugestão é você executar primeiro o comando bufr_dump e me enviar o conteúdo de /tmp/amv_decodificado.txt, ou pelo menos o início dele. Assim identificaremos corretamente os descritores e suas unidades antes de implementar a extração automática.
+
+
+COMANDO PARA VERIFICAR OS DESCRITORES
+=====================================
+
+bufr_dump -p -s unpack=1 /tmp/amv_teste.bufr > /tmp/amv_decodificado.txt
+
+arquivo amv_decodificado.txt. Agora temos informações suficientes para avançar: o produto contém os campos de posição, pressão, direção e velocidade do vento, além de componentes u e v e indicadores de qualidade.
+
+A melhoria será feita mantendo exatamente o fluxo que você pediu:
+
+    Procurar os arquivos em ~/vento_s3/data/sentinel3/.
+    Abrir cada ZIP diretamente, sem descompactá-lo.
+    Localizar exclusivamente o arquivo .bufr dentro do ZIP.
+    Decodificar os dados usando o ecCodes, que já funcionou no seu ambiente.
+    Extrair os vetores AMV e organizar os resultados em DataFrames.
+    Gravar um CSV por produto em output/csv/.
+
+No arquivo analisado, identifiquei estes campos principais:
+Campo BUFR	Informação
+#1#latitude	Latitude do vetor
+#1#longitude	Longitude do vetor
+#1#pressure	Pressão atmosférica
+windDirection	Direção do vento
+windSpeed	Velocidade do vento
+#1#trackingCorrelationOfVector	Correlação do rastreamento
+#1#timePeriod	Período temporal associado
+
+Também aparecem grupos adicionais de pressão, temperatura e componentes u e v. Não vou misturar esses grupos com o vetor principal sem antes confirmar a correspondência entre as sequências de replicação.
+
+
+4. Atenção à estrutura dos dados BUFR
+
+O arquivo decodificado mostra uma característica importante: existem campos repetidos, identificados por #1#, #2#, #3# etc.
+
+Por exemplo, há diferentes grupos de pressão e componentes u e v. Esses grupos não devem ser tratados automaticamente como vetores independentes.
+
+Nesta primeira versão, estou utilizando os campos principais identificados no arquivo:
+
+    #1#latitude e #1#longitude;
+    #1#pressure;
+    windDirection e windSpeed;
+    #1#trackingCorrelationOfVector.
+
+A pressão é convertida de Pa para hPa. A velocidade permanece em m/s.
+
+Referência: estrutura extraída do arquivo amv_decodificado.txt.
+5. Uma validação que quero fazer com você
+
+Depois de executar, gostaria de verificar três coisas:
+
+    Se o CSV contém 405 registros para o arquivo que apresentou 405 subconjuntos.
+    Se as coordenadas estão coerentes com a região geográfica coberta pelo produto.
+    Se a pressão, direção e velocidade estão corretamente associadas a cada posição.
+
+Ainda não incluí a filtragem por qualidade. Primeiro vamos validar os valores brutos e depois estabelecer critérios de seleção dos vetores AMV.
+
+
+Minha recomendação é manter a geração do CSV e acrescentar um arquivo GeoJSON para cada produto BUFR. Assim, teremos os dois formatos, cada um com uma finalidade específica:
+
+    CSV: ideal para análise com Pandas, estatísticas, filtragem e comparação dos dados.
+    GeoJSON: ideal para visualização geográfica, integração com mapas Leaflet, QGIS e outras ferramentas GIS.
+
+O GeoJSON é, na realidade, um arquivo JSON com uma estrutura própria para dados geográficos. Por isso, eu o escolheria em vez de um JSON genérico.
+1. Estrutura recomendada do GeoJSON
+
+Cada vetor AMV será representado por uma feição geográfica (Feature), com a posição do vento como geometria e os demais dados como propriedades.
+
+Exemplo de um registro:
+
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [-103.94395, -44.63910]
+  },
+  "properties": {
+    "vector_id": 1,
+    "pressure_pa": 33260.0,
+    "pressure_hpa": 332.6,
+    "wind_direction_deg": 309,
+    "wind_speed_ms": 44.3,
+    "tracking_correlation": 0.717,
+    "datetime": "2026-11-12 16:42:38",
+    "satellite": 856
+  }
+}
+
+Um detalhe importante: no GeoJSON, a ordem das coordenadas é longitude, latitude. Portanto, o primeiro valor será -103.94395 e o segundo -44.63910.
+2. Organização dos arquivos
+
+Sugiro manter esta organização:
+vento_s3/
+│
+├── data/
+│   └── sentinel3/
+│       └── *.zip
+│
+├── output/
+│   ├── csv/
+│   │   └── produto_*.csv
+│   │
+│   └── geojson/
+│       └── produto_*.geojson
+│
+└── src/
+    └── read_bufr.py
+3. Fluxo de processamento
+
+O programa read_bufr.py deverá:
+
+    Localizar os arquivos ZIP em data/sentinel3.
+    Ler diretamente o arquivo .bufr dentro de cada ZIP, sem extraí-lo permanentemente.
+    Decodificar os vetores AMV.
+    Organizar os dados em um DataFrame.
+    Gerar o CSV.
+    Gerar o GeoJSON a partir do mesmo DataFrame.
+
+Dessa maneira, os dois arquivos terão exatamente os mesmos vetores e atributos, evitando duplicação de processamento.
+4. Próxima etapa
+
+Depois de validarmos os GeoJSON, poderemos avançar para a visualização dos vetores de vento em um mapa interativo, utilizando:
+
+    posição geográfica;
+    direção do vento;
+    velocidade do vento;
+    nível de pressão;
+    horário da observação;
+    identificação do satélite.
+
+Também será importante verificar a convenção da direção do vento antes de desenhar as setas no mapa, para garantir que elas indiquem corretamente o sentido do movimento.
+
+Portanto, eu seguiria com CSV + GeoJSON, mantendo o CSV como saída tabular e o GeoJSON como formato geográfico principal para as próximas etapas do projeto.Minha recomendação é manter a geração do CSV e acrescentar um arquivo GeoJSON para cada produto BUFR. Assim, teremos os dois formatos, cada um com uma finalidade específica:
+
+    CSV: ideal para análise com Pandas, estatísticas, filtragem e comparação dos dados.
+    GeoJSON: ideal para visualização geográfica, integração com mapas Leaflet, QGIS e outras ferramentas GIS.
+
+O GeoJSON é, na realidade, um arquivo JSON com uma estrutura própria para dados geográficos. Por isso, eu o escolheria em vez de um JSON genérico.
+1. Estrutura recomendada do GeoJSON
+
+Cada vetor AMV será representado por uma feição geográfica (Feature), com a posição do vento como geometria e os demais dados como propriedades.
+
+Exemplo de um registro:
+
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [-103.94395, -44.63910]
+  },
+  "properties": {
+    "vector_id": 1,
+    "pressure_pa": 33260.0,
+    "pressure_hpa": 332.6,
+    "wind_direction_deg": 309,
+    "wind_speed_ms": 44.3,
+    "tracking_correlation": 0.717,
+    "datetime": "2026-11-12 16:42:38",
+    "satellite": 856
+  }
+}
+
+Um detalhe importante: no GeoJSON, a ordem das coordenadas é longitude, latitude. Portanto, o primeiro valor será -103.94395 e o segundo -44.63910.
+2. Organização dos arquivos
+
+Sugiro manter esta organização:
+vento_s3/
+│
+├── data/
+│   └── sentinel3/
+│       └── *.zip
+│
+├── output/
+│   ├── csv/
+│   │   └── produto_*.csv
+│   │
+│   └── geojson/
+│       └── produto_*.geojson
+│
+└── src/
+    └── read_bufr.py
+3. Fluxo de processamento
+
+O programa read_bufr.py deverá:
+
+    Localizar os arquivos ZIP em data/sentinel3.
+    Ler diretamente o arquivo .bufr dentro de cada ZIP, sem extraí-lo permanentemente.
+    Decodificar os vetores AMV.
+    Organizar os dados em um DataFrame.
+    Gerar o CSV.
+    Gerar o GeoJSON a partir do mesmo DataFrame.
+
+Dessa maneira, os dois arquivos terão exatamente os mesmos vetores e atributos, evitando duplicação de processamento.
+4. Próxima etapa
+
+Depois de validarmos os GeoJSON, poderemos avançar para a visualização dos vetores de vento em um mapa interativo, utilizando:
+
+    posição geográfica;
+    direção do vento;
+    velocidade do vento;
+    nível de pressão;
+    horário da observação;
+    identificação do satélite.
+
+Também será importante verificar a convenção da direção do vento antes de desenhar as setas no mapa, para garantir que elas indiquem corretamente o sentido do movimento.
+
+Portanto, eu seguiria com CSV + GeoJSON, mantendo o CSV como saída tabular e o GeoJSON como formato geográfico principal para as próximas etapas do projeto.
+
+
+rotinas para o projeto vento_s3:
+
+    read_bufr.py: leitura dos arquivos BUFR diretamente dos ZIPs, geração de CSV e GeoJSON.
+    plot_amv_map.py: visualização interativa dos vetores AMV em mapa HTML.
+
+1. Arquivos
+
+O pacote contém os dois programas e um README com instruções de instalação e execução.
+
+Baixar pacote com as duas rotinas — ZIP
+
+Arquivos individuais:
+
+Validei a sintaxe Python dos dois programas. Ainda será necessário executar a decodificação no seu ambiente para validar os campos com os BUFR reais.
+2. Instalação
+
+No ambiente Conda vento_s3:
+
+conda activate vento_s3
+
+pip install eccodes pandas folium branca
+
+A biblioteca ecCodes do sistema também precisa estar instalada. No Ubuntu/WSL:
+
+sudo apt install libeccodes-tools libeccodes-data
+
+3. Executar a leitura dos BUFR
+
+A partir de ~/vento_s3:
+
+python src/read_bufr.py
+
+A rotina procurará os ZIPs em:
+data/sentinel3/
+
+E produzirá:
+output/
+├── csv/
+│   ├── produto_1.csv
+│   └── produto_2.csv
+│
+└── geojson/
+    ├── produto_1.geojson
+    └── produto_2.geojson
+
+Para reprocessar arquivos já existentes:
+
+python src/read_bufr.py --overwrite
+
+4. Gerar o mapa interativo
+
+Depois da geração dos GeoJSON:
+
+python src/plot_amv_map.py
+
+O resultado será:
+output/maps/sentinel3_amv_map.html
+
+Abra no navegador:
+
+xdg-open output/maps/sentinel3_amv_map.html
+
+O mapa terá:
+
+    Vetores de vento representados por setas.
+    Cores associadas à velocidade do vento.
+    Popup com latitude, longitude, pressão, direção, velocidade e correlação.
+    Alternância entre OpenStreetMap e imagem de satélite.
+    Controle deslizante para ajustar a correlação mínima dos vetores.
+
+5. Dois parâmetros importantes
+
+Correlação mínima: o mapa inicia mostrando todos os vetores. O controle deslizante permite ajustar o limite de correlação entre 0 e 1 e observar quantos vetores permanecem visíveis.
+
+Comprimento das setas: o padrão inicial é 40 km. É apenas uma escala gráfica para facilitar a visualização, não representa a distância efetivamente percorrida pelo vento.
+
+Pode ser alterado na execução:
+
+python src/plot_amv_map.py --arrow-length-km 60
+
+6. Atenção à direção do vento
+
+Na rotina, considerei windDirection como direção meteorológica, ou seja, de onde o vento vem. Por isso, a seta é desenhada no sentido oposto, indicando para onde o vento se desloca.
+
+Essa convenção deve ser confirmada na documentação específica do produto AMV antes de utilizar as setas em análises científicas.
+Próxima validação
+
+Sugiro executar primeiro:
+
+python src/read_bufr.py --overwrite
+
+Depois:
+
+python src/plot_amv_map.py
+
+Envie o resultado da execução e, se possível, uma captura do mapa. A partir daí, podemos ajustar a representação dos vetores, incluindo escala, cores por velocidade e filtros por nível de pressão, para chegar a uma visualização meteorológica mais adequada
+
+Abrir pelo servidor HTTP local
+
+Em vez de abrir diretamente o arquivo HTML, execute:
+
+python -m http.server 8000 --directory output/maps
+
+No navegador, acesse:
+http://127.0.0.1:8000/sentinel3_amv_map.html
+
+Mantenha o terminal aberto enquanto estiver utilizando o mapa. Para encerrar o servidor, pressione Ctrl+C.
+4. Alternar o mapa-base
+
+Por padrão, será utilizada a imagem de satélite da Esri.
+
+Se preferir iniciar com o mapa claro:
+
+python src/plot_amv_map.py --basemap carto

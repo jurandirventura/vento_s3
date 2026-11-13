@@ -1,0 +1,36 @@
+# Dados de entrada
+/data/
+
+# Resultados processados
+/output/
+
+# Diretório de testes
+/teste/
+
+# Ambientes Python
+venv/
+.venv/
+env/
+__pycache__/
+
+# Arquivos Python compilados
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos temporários
+*.log
+*.tmp
+
+# Configurações locais e credenciais
+.env
+
+# Configurações de editores
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Cache de testes
+.pytest_cache/

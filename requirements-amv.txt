@@ -1,0 +1,5 @@
+# Dependências Python para as rotinas AMV
+numpy
+pandas
+eccodes
+folium

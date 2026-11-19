@@ -59,7 +59,7 @@ Evite abrir diretamente pelo endereço `file:///`. Sirva o HTML por HTTP local:
 python -m http.server 8000 --directory output/maps
 ```
 
-Acesse no navegador:
+Acesse no navegador (Se der erro, use 8001):
 
 ```text
 http://127.0.0.1:8000/sentinel3_amv_map.html

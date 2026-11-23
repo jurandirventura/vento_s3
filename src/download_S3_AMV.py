@@ -221,12 +221,12 @@ BBOX = "-86.17,-59.01,-30.12,11.60"
 
 YEAR = START_DATE[:4]
 
-# BASE_DOWNLOAD_DIR = (
-#     DATA_DIR
-#     / "L2"
-# )
+BASE_DOWNLOAD_DIR = (
+    DATA_DIR
+    / "L2"
+)
 
-BASE_DOWNLOAD_DIR = "/home/jurandir/vento_s3/data/sentinel3/"
+# BASE_DOWNLOAD_DIR = "/home/jurandir/vento_s3/data/sentinel3/"
 
 
 # ============================================================

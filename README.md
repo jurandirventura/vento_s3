@@ -31,6 +31,18 @@ S3B_AMV - Apenas para o Sentinel-3B
 S3AB_AMV - Baixa dados do Sentinel-3 A e B
 ```
 
+Arquivo de entrada: 
+~vento_s3_data/L2/S3A_AMV/2026
+S3A_SL_2_AMV____20260810T013551_20260810T013851_20260810T024115_0179_142_316_5220_MAR_O_NR_001.SEN3.zip
+
+Arquivo de saída: 
+~vento_s3/output/geojson
+S3A_SL_2_AMV____20260810T013551_20260810T013851_20260810T024115_0179_142_316_5220_MAR_O_NR_001.SEN3.geojson
+
+~vento_s3/output/csv
+S3A_SL_2_AMV____20260810T013551_20260810T013851_20260810T024115_0179_142_316_5220_MAR_O_NR_001.SEN3.csv
+
+
 Próxima etapa: Leitura dos dados AMV em formato BUFR:
 
 ```bash

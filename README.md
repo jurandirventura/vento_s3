@@ -21,6 +21,18 @@ sudo apt install libeccodes-tools libeccodes-data
 ## 1. Processar os BUFR
 A partir da raiz `~/vento_s3`:
 
+Se não tiver os arquivos, fazer download 
+
+```bash
+python -m src.download_S3_AMV S3AB_AMV 2026-08-10 2026-08-10
+
+S3A_AMV - Apenas para o Sentinel-3A
+S3B_AMV - Apenas para o Sentinel-3B
+S3AB_AMV - Baixa dados do Sentinel-3 A e B
+```
+
+Próxima etapa: Leitura dos dados AMV em formato BUFR:
+
 ```bash
 python src/read_bufr.py
 ```
